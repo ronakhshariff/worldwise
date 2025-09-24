@@ -1,46 +1,137 @@
-# Getting Started with Create React App
+# WorldWise 🌍
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A beautiful, interactive geography guessing game where you discover the world through faces and cultures. Test your knowledge of global diversity and learn about different countries and their people.
 
-## Available Scripts
+## ✨ Features
 
-In the project directory, you can run:
+### 🎮 Game Modes
+- **Culture Game**: Guess where people are from based on their photos
+- **Food Game**: Identify the origins of delicious dishes from around the world
 
-### `npm start`
+### 🏆 User System
+- **Beautiful Authentication**: Sign up and sign in with email/password
+- **User Profiles**: Track your progress, scores, and achievements
+- **Rank System**: Unlock titles like Globe Master, World Explorer, and Geography Expert
+- **Progress Tracking**: Visual progress bars and statistics
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### 🎯 Game Features
+- **Interactive Maps**: Click to place your guesses on a world map
+- **Hint System**: Use name and language hints (with point deductions)
+- **Scoring System**: Points based on distance and accuracy
+- **Beautiful UI**: Modern design with animations and glass morphism effects
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+### 🌍 Global Content
+- **57+ Countries**: People from diverse cultures and backgrounds
+- **Native Languages**: See how names and languages are written in their native scripts
+- **Cultural Diversity**: Learn about different ethnicities and traditions
 
-### `npm test`
+## 🚀 Getting Started
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Prerequisites
+- Node.js (v14 or higher)
+- npm or yarn
 
-### `npm run build`
+### Installation
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/worldwise.git
+cd worldwise
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+2. Install dependencies:
+```bash
+npm install
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+3. Set up Firebase:
+   - Create a Firebase project
+   - Enable Authentication and Firestore
+   - Update `src/firebase.ts` with your config
 
-### `npm run eject`
+4. Start the development server:
+```bash
+npm start
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+## 🛠️ Tech Stack
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- **React 18** with TypeScript
+- **Framer Motion** for animations
+- **Firebase** for authentication and database
+- **React Leaflet** for interactive maps
+- **Tailwind CSS** for styling
+- **Lucide React** for icons
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## 🎨 Design Features
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+- **Glass Morphism**: Beautiful backdrop blur effects
+- **Gradient Backgrounds**: Dynamic color schemes
+- **Smooth Animations**: Framer Motion transitions
+- **Responsive Design**: Mobile-first approach
+- **Modern UI**: Clean, contemporary interface
 
-## Learn More
+## 🔧 Configuration
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Firebase Setup
+1. Create a Firebase project
+2. Enable Authentication (Email/Password)
+3. Enable Firestore Database
+4. Update the configuration in `src/firebase.ts`
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Environment Variables
+Create a `.env` file with your Firebase configuration:
+```
+REACT_APP_FIREBASE_API_KEY=your_api_key
+REACT_APP_FIREBASE_AUTH_DOMAIN=your_auth_domain
+REACT_APP_FIREBASE_PROJECT_ID=your_project_id
+```
+
+## 📱 Features in Detail
+
+### Authentication System
+- **Sign Up/Sign In**: Email and password authentication
+- **User Profiles**: Comprehensive user data management
+- **Session Management**: Persistent login state
+
+### Game Mechanics
+- **Interactive Maps**: Click to place guesses
+- **Hint System**: Name and language hints with point deductions
+- **Scoring**: Distance-based scoring with accuracy levels
+- **Progress Tracking**: Round-by-round progress
+
+### User Experience
+- **Beautiful Animations**: Smooth transitions and micro-interactions
+- **Responsive Design**: Works on all device sizes
+- **Accessibility**: Keyboard navigation and screen reader support
+- **Performance**: Optimized for fast loading
+
+## 🌟 Why WorldWise?
+
+WorldWise is more than just a game—it's a journey of discovery. By guessing where people are from, you'll:
+
+- **Learn about global diversity** and cultural differences
+- **Improve your geography knowledge** through interactive gameplay
+- **Discover new languages** and writing systems
+- **Connect with people** from around the world
+- **Develop cultural awareness** and understanding
+
+## 🤝 Contributing
+
+We welcome contributions! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- **Firebase** for authentication and database services
+- **React Leaflet** for interactive mapping
+- **Framer Motion** for beautiful animations
+- **Lucide React** for the amazing icon set
+- **Tailwind CSS** for the utility-first CSS framework
+
+---
+
+Made with ❤️ for global understanding and cultural appreciation

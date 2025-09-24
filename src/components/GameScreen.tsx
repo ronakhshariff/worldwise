@@ -1,0 +1,602 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { Icon } from 'leaflet';
+import { Clock, Target, Lock, Volume2, Shirt, MapPin, Info, Eye, EyeOff, Lightbulb, Languages, Maximize2, X } from 'lucide-react';
+import { GameState, Person, Guess } from '../types/GameTypes';
+import 'leaflet/dist/leaflet.css';
+
+// Fix for default markers in react-leaflet
+delete (Icon.Default.prototype as any)._getIconUrl;
+Icon.Default.mergeOptions({
+  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
+  iconUrl: require('leaflet/dist/images/marker-icon.png'),
+  shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
+});
+
+interface GameScreenProps {
+  gameState: GameState;
+  currentPerson: Person | null;
+  onSubmitGuess: (guess: Guess) => void;
+}
+
+// Language mapping function for all people - returns ACTUAL NATIVE SCRIPTS
+const getNativeScriptLanguage = (personName: string, ethnicity: string): string => {
+  // Person-specific mappings for new people - ACTUAL SCRIPTS
+  if (personName === 'Matilda Wilson') return 'English'; // Australian
+  if (personName === 'Dolores Lopez') return 'Español'; // Mexican
+  if (personName === 'Maria Camilla') return 'Español'; // Colombian
+  if (personName === 'Chukwudi Adeyemi') return 'English'; // Nigerian
+  if (personName === 'Kwame Mensah') return 'English'; // Ghanaian
+  if (personName === 'Mamadou Diof') return 'Français'; // Senegalese
+  if (personName === 'Abdisalam Warsame') return 'Français'; // Senegalese
+  if (personName === 'Deng Akech') return 'English'; // South Sudanese
+  if (personName === 'Selamawit Tesfaye') return 'አማርኛ'; // Ethiopian (Amharic)
+  if (personName === 'Tesfam Gebremedhin') return 'ትግርኛ'; // Eritrean (Tigrinya)
+  if (personName === 'Tendai Moyo') return 'English'; // Zimbabwean
+  if (personName === 'Naledi Khumalo') return 'English'; // South African
+  if (personName === 'Brian Otieno') return 'English'; // Kenyan
+  if (personName === 'Mateo Fernandez') return 'Español'; // Argentine
+  if (personName === 'Luis Martinez') return 'Español'; // Dominican
+  if (personName === 'Andre Campbell') return 'English'; // Jamaican
+  if (personName === 'Rafael Oliveira') return 'Português'; // Brazilian
+  if (personName === 'Matias Rojas') return 'Español'; // Chilean
+  if (personName === 'James Smith') return 'English'; // English
+  if (personName === 'Callum Fraser') return 'English'; // Scottish
+  if (personName === 'Gareth Bale') return 'English'; // Welsh
+  if (personName === 'Didier Drogba') return 'Français'; // Ivorian
+  if (personName === 'Gianluigi Buffon') return 'Italiano'; // Italian
+  if (personName === 'Nadia Bouzid') return 'العربية'; // Algerian
+  if (personName === 'Sadia Qureshi') return 'اردو'; // Pakistani
+  if (personName === 'Laila Noorzai') return 'پښتو'; // Afghan (Pashto)
+  if (personName === 'Karim Benkacem') return 'العربية'; // Algerian
+  if (personName === 'Youssef El-Mansour') return 'العربية'; // Moroccan
+  if (personName === 'Omar Al-Obaid') return 'العربية'; // Iraqi
+  if (personName === 'Mohamed Fathy') return 'العربية'; // Egyptian
+  if (personName === 'Tarek Hamdan') return 'العربية'; // Lebanese
+  if (personName === 'Ahmad Shah Durrani') return 'پښتو'; // Afghan (Pashto)
+  if (personName === 'Kourosh Farhad') return 'فارسی'; // Persian
+  if (personName === 'Atif Siddiqui') return 'اردو'; // Pakistani
+  if (personName === 'Emre Demir') return 'Türkçe'; // Turkish
+  if (personName === 'Zeynep Celik') return 'Türkçe'; // Turkish
+  if (personName === 'Amina Benali') return 'العربية'; // Algerian
+  if (personName === 'Roxana Esfandiari') return 'فارسی'; // Persian
+  if (personName === 'Aisha Al-Falasi') return 'العربية'; // Emirati
+  if (personName === 'Safeena Farooqui') return 'اردو'; // Indian (Urdu)
+  
+  // Existing person-specific mappings - ACTUAL SCRIPTS
+  if (personName === 'Afreen Mirza') return 'اردو'; // Urdu
+  if (personName === 'Shaheen Malik') return 'اردو'; // Urdu
+  if (personName === 'Aamir Bhat') return 'کٲشُر'; // Kashmiri
+  if (personName === 'Shahnawaz Mengal') return 'بلۏچی'; // Balochi
+  if (personName === 'Gul Afridi') return 'پښتو'; // Pashto
+  if (personName === 'Zarmina Yusufzai') return 'پښتو'; // Pashto
+  if (personName === 'Yuvraj Sahota') return 'ਪੰਜਾਬੀ'; // Punjabi
+  if (personName === 'Arul Subramanian') return 'தமிழ்'; // Tamil
+  if (personName === 'Ananya Kikon') return 'Naga'; // Naga
+  if (personName === 'Jamshid Karimov') return 'Oʻzbekcha'; // Uzbek
+  
+  // Fallback to ethnicity-based mappings - ACTUAL SCRIPTS
+  const nativeScripts: { [key: string]: string } = {
+    'Australian': 'English', 'Mexican': 'Español', 'Colombian': 'Español',
+    'Nigerian': 'English', 'Ghanaian': 'English', 'Senegalese': 'Français',
+    'South Sudanese': 'English', 'Ethiopian': 'አማርኛ', 'Eritrean': 'ትግርኛ',
+    'Zimbabwean': 'English', 'South African': 'English', 'Kenyan': 'English',
+    'Argentine': 'Español', 'Dominican': 'Español', 'Jamaican': 'English',
+    'Brazilian': 'Português', 'Chilean': 'Español', 'English': 'English',
+    'Scottish': 'English', 'Welsh': 'English', 'Ivorian': 'Français',
+    'Italian': 'Italiano', 'Algerian': 'العربية', 'Pakistani': 'اردو',
+    'Afghan': 'پښتو', 'Moroccan': 'العربية', 'Iraqi': 'العربية',
+    'Egyptian': 'العربية', 'Lebanese': 'العربية', 'Persian': 'فارسی',
+    'Turkish': 'Türkçe', 'Emirati': 'العربية', 'Indian': 'اردو',
+    'Kashmiri': 'کٲشُر', 'Sindhi': 'سنڌي', 'Javanese': 'ꦧꦱꦗꦮ', 'Kyrgyz': 'Кыргызча',
+    'Armenian': 'Հայերեն', 'Albanian': 'Shqip',
+    'Tamil': 'தமிழ்', 'Yemeni': 'العربية', 'Arabic': 'العربية', 'Chinese': '中文',
+    'Japanese': '日本語', 'Korean': '한국어', 'Thai': 'ไทย', 'Hindi': 'हिन्दी',
+    'Bengali': 'বাংলা', 'Russian': 'Русский', 'Greek': 'Ελληνικά',
+    'French': 'Français', 'German': 'Deutsch', 'Spanish': 'Español', 'Italiano': 'Italiano',
+    'Portuguese': 'Português', 'Dutch': 'Nederlands', 'Swedish': 'Svenska', 'Norwegian': 'Norsk',
+    'Danish': 'Dansk', 'Finnish': 'Suomi', 'Polish': 'Polski', 'Czech': 'Čeština',
+    'Hungarian': 'Magyar', 'Romanian': 'Română', 'Bulgarian': 'Български', 'Croatian': 'Hrvatski',
+    'Serbian': 'Српски', 'Slovak': 'Slovenčina', 'Slovenian': 'Slovenščina', 'Estonian': 'Eesti',
+    'Latvian': 'Latviešu', 'Lithuanian': 'Lietuvių', 'Ukrainian': 'Українська', 'Belarusian': 'Беларуская',
+    'Georgian': 'ქართული', 'Azerbaijani': 'Azərbaycan', 'Kazakh': 'Қазақша', 'Uzbek': 'Oʻzbekcha',
+    'Tajik': 'Тоҷикӣ', 'Turkmen': 'Türkmen', 'Mongolian': 'Монгол', 'Tibetan': 'བོད་ཡིག',
+    'Nepali': 'नेपाली', 'Sinhala': 'සිංහල', 'Malayalam': 'മലയാളം', 'Telugu': 'తెలుగు',
+    'Kannada': 'ಕನ್ನಡ', 'Gujarati': 'ગુજરાતી', 'Marathi': 'मराठी', 'Punjabi': 'ਪੰਜਾਬੀ',
+    'Urdu': 'اردو', 'Pashto': 'پښتو', 'Dari': 'دری', 'Farsi': 'فارسی',
+    'Kurdish': 'کوردی', 'Hebrew': 'עברית', 'Amharic': 'አማርኛ', 'Swahili': 'Kiswahili',
+    'Hausa': 'Hausa', 'Yoruba': 'Yorùbá', 'Igbo': 'Igbo', 'Zulu': 'IsiZulu',
+    'Afrikaans': 'Afrikaans', 'Indonesian': 'Bahasa Indonesia', 'Malay': 'Bahasa Melayu',
+    'Filipino': 'Tagalog', 'Vietnamese': 'Tiếng Việt', 'Khmer': 'ខ្មែរ', 'Lao': 'ລາວ',
+    'Burmese': 'မြန်မာ', 'Assamese': 'অসমীয়া', 'Odia': 'ଓଡ଼ିଆ', 'Maithili': 'मैथिली',
+    'Bhojpuri': 'भोजपुरी', 'Rajasthani': 'राजस्थानी', 'Balochi': 'بلۏچی', 'Dogri': 'डोगरी',
+    'Konkani': 'कोंकणी', 'Tulu': 'ತುಳು', 'Kodava': 'ಕೊಡವ', 'Beary': 'ಬ್ಯಾರಿ',
+    'Chechen': 'Нохчийн', 'Dagestani': 'Русский', 'Swiss': 'Deutsch', 'Irish': 'Gaeilge',
+    'Bosnian': 'Bosanski', 'Austrian': 'Deutsch', 'Icelandic': 'Íslenska', 'Tigrinya': 'ትግርኛ'
+  };
+  
+  return nativeScripts[ethnicity] || ethnicity;
+};
+
+const GameScreen: React.FC<GameScreenProps> = ({ gameState, currentPerson, onSubmitGuess }) => {
+  // Use a more robust state management approach
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [timeLeft, setTimeLeft] = useState(gameState.timeLeft);
+  const [showHints, setShowHints] = useState(false);
+  const [showName, setShowName] = useState(false);
+  const [showLanguage, setShowLanguage] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Reset selectedLocation when component mounts or person changes
+  useEffect(() => {
+    setSelectedLocation(null);
+  }, [currentPerson]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          // Auto-submit if time runs out
+          if (selectedLocation && selectedLocation.lat && selectedLocation.lng) {
+            onSubmitGuess({
+              lat: selectedLocation.lat,
+              lng: selectedLocation.lng,
+              country: 'Unknown'
+            });
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [selectedLocation, onSubmitGuess]);
+
+  const MapClickHandler = () => {
+    useMapEvents({
+      click: (e) => {
+        console.log('Map clicked:', e.latlng); // Debug log
+        if (e.latlng && 
+            typeof e.latlng.lat === 'number' && 
+            typeof e.latlng.lng === 'number' && 
+            !isNaN(e.latlng.lat) && 
+            !isNaN(e.latlng.lng) &&
+            e.latlng.lat >= -90 && 
+            e.latlng.lat <= 90 &&
+            e.latlng.lng >= -180 && 
+            e.latlng.lng <= 180) {
+          console.log('Setting location:', e.latlng.lat, e.latlng.lng); // Debug log
+          // Create a completely new object to avoid any reference issues
+          const newLocation = {
+            lat: Number(e.latlng.lat),
+            lng: Number(e.latlng.lng)
+          };
+          setSelectedLocation(newLocation);
+        } else {
+          console.log('Invalid coordinates:', e.latlng); // Debug log
+        }
+      }
+    });
+    return null;
+  };
+
+  const handleSubmitGuess = () => {
+    if (selectedLocation && selectedLocation.lat && selectedLocation.lng && 
+        !isNaN(selectedLocation.lat) && !isNaN(selectedLocation.lng)) {
+      onSubmitGuess({
+        lat: selectedLocation.lat,
+        lng: selectedLocation.lng,
+        country: 'Unknown' // This would be determined by reverse geocoding
+      });
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  if (!currentPerson) return null;
+
+  // Create a completely safe validation function
+  const isValidLocation = (): boolean => {
+    if (!selectedLocation) return false;
+    if (selectedLocation.lat === undefined || selectedLocation.lat === null) return false;
+    if (selectedLocation.lng === undefined || selectedLocation.lng === null) return false;
+    if (isNaN(selectedLocation.lat) || isNaN(selectedLocation.lng)) return false;
+    if (selectedLocation.lat < -90 || selectedLocation.lat > 90) return false;
+    if (selectedLocation.lng < -180 || selectedLocation.lng > 180) return false;
+    return true;
+  };
+
+  const safeLocation = isValidLocation() ? selectedLocation : null;
+
+  console.log('Selected location:', selectedLocation); // Debug log
+  console.log('Is valid location:', isValidLocation()); // Debug log
+  console.log('Safe location:', safeLocation); // Debug log
+
+  // Get the ACTUAL native script language for this person
+  const nativeLanguage = getNativeScriptLanguage(currentPerson.name, currentPerson.actualLocation.ethnicity);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex justify-between items-center mb-8"
+        >
+          <div className="flex items-center gap-4">
+            <div className="card">
+              <div className="flex items-center gap-3">
+                <Clock className="w-6 h-6 text-primary-600" />
+                <span className="text-2xl font-bold text-gray-800">
+                  {formatTime(timeLeft)}
+                </span>
+              </div>
+            </div>
+            <div className="card">
+              <div className="flex items-center gap-3">
+                <Target className="w-6 h-6 text-secondary-600" />
+                <span className="text-xl font-semibold text-gray-800">
+                  Round {gameState.round}/{gameState.totalRounds}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="card">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-sm">🔥</span>
+              </div>
+              <span className="text-xl font-bold text-gray-800">
+                Score: {gameState.score}
+              </span>
+            </div>
+          </div>
+        </motion.div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left: Person Photo */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="lg:col-span-1"
+          >
+            <div className="card p-0 overflow-hidden">
+              <div className="relative">
+                <img
+                  src={currentPerson.image}
+                  alt={currentPerson.name}
+                  className="w-full h-96 object-cover"
+                />
+                <div className="absolute top-4 right-4">
+                  <button
+                    onClick={() => setIsFullscreen(true)}
+                    className="glass p-3 rounded-full hover:bg-white/20 transition-all duration-200"
+                  >
+                    <Maximize2 className="w-6 h-6 text-white" />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                {/* Beautiful Name Hint Bar */}
+                <div className="mb-4">
+                  <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-r from-amber-400 via-orange-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
+                          <Lightbulb className="w-5 h-5 text-white drop-shadow-sm" />
+                        </div>
+                        <div>
+                          <h2 className="text-xl font-bold text-gray-800">
+                            {showName ? currentPerson.name : 'Name Hint'}
+                          </h2>
+                          <p className="text-sm text-gray-600">
+                            {showName ? 'Full name revealed' : 'Click to reveal name'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={() => setShowName(!showName)}
+                        className="group relative p-3 rounded-xl bg-white shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 hover:border-primary-300"
+                      >
+                        <AnimatePresence mode="wait">
+                          {showName ? (
+                            <motion.div
+                              key="hide"
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.8 }}
+                              transition={{ duration: 0.2 }}
+                              className="flex items-center gap-2"
+                            >
+                              <EyeOff className="w-5 h-5 text-gray-600 group-hover:text-primary-600 transition-colors" />
+                              <span className="text-sm font-medium text-gray-600 group-hover:text-primary-600 transition-colors">
+                                Hide
+                              </span>
+                            </motion.div>
+                          ) : (
+                            <motion.div
+                              key="show"
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.8 }}
+                              transition={{ duration: 0.2 }}
+                              className="flex items-center gap-2"
+                            >
+                              <Eye className="w-5 h-5 text-gray-600 group-hover:text-primary-600 transition-colors" />
+                              <span className="text-sm font-medium text-gray-600 group-hover:text-primary-600 transition-colors">
+                                Show
+                              </span>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </button>
+                    </div>
+                    
+                    {/* Name Hint Content */}
+                    <AnimatePresence>
+                      {!showName && showHints && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mt-4 pt-4 border-t border-gray-200"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-gradient-to-r from-accent-400 to-accent-500 rounded-lg flex items-center justify-center shadow-md">
+                              <span className="text-white font-bold text-lg">
+                                {currentPerson.name.charAt(0)}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-700">
+                                Name starts with "{currentPerson.name.charAt(0)}"
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {currentPerson.name.length} letters total
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+
+                {/* Beautiful Language Hint Bar - SIMPLE REPLACEMENT */}
+                <div className="mb-6">
+                  <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-r from-blue-400 via-purple-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg">
+                          <Languages className="w-5 h-5 text-white drop-shadow-sm" />
+                        </div>
+                        <div>
+                          <h2 className="text-xl font-bold text-gray-800">
+                            {showLanguage ? nativeLanguage : 'Language Hint'}
+                          </h2>
+                          <p className="text-sm text-gray-600">
+                            {showLanguage ? 'Native script revealed' : 'Click to reveal native script'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={() => setShowLanguage(!showLanguage)}
+                        className="group relative p-3 rounded-xl bg-white shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 hover:border-primary-300"
+                      >
+                        <AnimatePresence mode="wait">
+                          {showLanguage ? (
+                            <motion.div
+                              key="hide"
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.8 }}
+                              transition={{ duration: 0.2 }}
+                              className="flex items-center gap-2"
+                            >
+                              <EyeOff className="w-5 h-5 text-gray-600 group-hover:text-primary-600 transition-colors" />
+                              <span className="text-sm font-medium text-gray-600 group-hover:text-primary-600 transition-colors">
+                                Hide
+                              </span>
+                            </motion.div>
+                          ) : (
+                            <motion.div
+                              key="show"
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.8 }}
+                              transition={{ duration: 0.2 }}
+                              className="flex items-center gap-2"
+                            >
+                              <Eye className="w-5 h-5 text-gray-600 group-hover:text-primary-600 transition-colors" />
+                              <span className="text-sm font-medium text-gray-600 group-hover:text-primary-600 transition-colors">
+                                Show
+                              </span>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <p className="text-gray-600 text-center">
+                  Where do you think this person is from?
+                </p>
+              </div>
+            </div>
+
+            {/* Hints Panel */}
+            <AnimatePresence>
+              {showHints && currentPerson.hints && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="card mt-4"
+                >
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                    Cultural Hints
+                  </h3>
+                  <div className="space-y-3">
+                    {currentPerson.hints.voice && (
+                      <div className="flex items-center gap-3">
+                        <Volume2 className="w-5 h-5 text-primary-600" />
+                        <span className="text-gray-700">{currentPerson.hints.voice}</span>
+                      </div>
+                    )}
+                    {currentPerson.hints.clothing && (
+                      <div className="flex items-center gap-3">
+                        <Shirt className="w-5 h-5 text-secondary-600" />
+                        <span className="text-gray-700">{currentPerson.hints.clothing}</span>
+                      </div>
+                    )}
+                    {currentPerson.hints.background && (
+                      <div className="flex items-center gap-3">
+                        <MapPin className="w-5 h-5 text-accent-600" />
+                        <span className="text-gray-700">{currentPerson.hints.background}</span>
+                      </div>
+                    )}
+                    {currentPerson.hints.fact && (
+                      <div className="flex items-center gap-3">
+                        <Info className="w-5 h-5 text-green-600" />
+                        <span className="text-gray-700">{currentPerson.hints.fact}</span>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+
+          {/* Center: Interactive Map */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4 }}
+            className="lg:col-span-2"
+          >
+            <div className="card p-0 overflow-hidden">
+              <div className="h-96 lg:h-[500px]">
+                <MapContainer
+                  center={[20, 0]}
+                  zoom={2}
+                  style={{ height: '100%', width: '100%' }}
+                  className="rounded-2xl"
+                >
+                  <TileLayer
+                    url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
+                  />
+                  <MapClickHandler />
+                  {safeLocation && (
+                    <Marker position={[safeLocation.lat, safeLocation.lng]} />
+                  )}
+                </MapContainer>
+              </div>
+              
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-semibold text-gray-800">
+                    Click on the map to place your guess
+                  </h3>
+                  {safeLocation && (
+                    <div className="text-sm text-gray-600">
+                      {safeLocation.lat.toFixed(4)}, {safeLocation.lng.toFixed(4)}
+                    </div>
+                  )}
+                </div>
+                
+                <button
+                  onClick={handleSubmitGuess}
+                  disabled={!safeLocation || timeLeft === 0}
+                  className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 ${
+                    safeLocation && timeLeft > 0
+                      ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  <div className="flex items-center justify-center gap-3">
+                    <Lock className="w-6 h-6" />
+                    Lock in Guess
+                  </div>
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Progress Bar */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="mt-8"
+        >
+          <div className="card">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-600">Round Progress</span>
+              <span className="text-sm font-medium text-gray-600">
+                {gameState.round} of {gameState.totalRounds}
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <motion.div
+                className="bg-gradient-to-r from-primary-500 to-secondary-500 h-3 rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${(gameState.round / gameState.totalRounds) * 100}%` }}
+                transition={{ duration: 0.8 }}
+              />
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Fullscreen Modal - NO SPOILERS */}
+      <AnimatePresence>
+        {isFullscreen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center p-4"
+            onClick={() => setIsFullscreen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="relative max-w-4xl max-h-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setIsFullscreen(false)}
+                className="absolute top-4 right-4 z-10 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-all duration-200"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              <img
+                src={currentPerson.image}
+                alt="Person"
+                className="w-full h-auto max-h-[90vh] object-contain rounded-lg shadow-2xl"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+export default GameScreen;
