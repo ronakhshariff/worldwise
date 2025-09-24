@@ -355,15 +355,15 @@ const GameScreen: React.FC<GameScreenProps> = ({ gameState, currentPerson, onSub
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-gradient-to-r from-accent-400 to-accent-500 rounded-lg flex items-center justify-center shadow-md">
                               <span className="text-white font-bold text-lg">
-                                {currentPerson.name.charAt(0)}
+                                {currentPerson?.name?.charAt(0) || "?"}
                               </span>
                             </div>
                             <div>
                               <p className="text-sm font-medium text-gray-700">
-                                Name starts with "{currentPerson.name.charAt(0)}"
+                                Name starts with "{currentPerson?.name?.charAt(0) || "?"}"
                               </p>
                               <p className="text-xs text-gray-500">
-                                {currentPerson.name.length} letters total
+                                {currentPerson?.name?.length || 0} letters total
                               </p>
                             </div>
                           </div>
@@ -439,7 +439,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ gameState, currentPerson, onSub
 
             {/* Hints Panel */}
             <AnimatePresence>
-              {false && currentPerson.hints && (
+              {false && currentPerson?.hints && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
@@ -450,28 +450,28 @@ const GameScreen: React.FC<GameScreenProps> = ({ gameState, currentPerson, onSub
                     Cultural Hints
                   </h3>
                   <div className="space-y-3">
-                    {currentPerson.hints.voice && (
+                    {currentPerson?.hints?.voice && (
                       <div className="flex items-center gap-3">
                         <Volume2 className="w-5 h-5 text-primary-600" />
-                        <span className="text-gray-700">{currentPerson.hints.voice}</span>
+                        <span className="text-gray-700">{currentPerson?.hints?.voice}</span>
                       </div>
                     )}
-                    {currentPerson.hints.clothing && (
+                    {currentPerson?.hints?.clothing && (
                       <div className="flex items-center gap-3">
                         <Shirt className="w-5 h-5 text-secondary-600" />
-                        <span className="text-gray-700">{currentPerson.hints.clothing}</span>
+                        <span className="text-gray-700">{currentPerson?.hints?.clothing}</span>
                       </div>
                     )}
-                    {currentPerson.hints.background && (
+                    {currentPerson?.hints?.background && (
                       <div className="flex items-center gap-3">
                         <MapPin className="w-5 h-5 text-accent-600" />
-                        <span className="text-gray-700">{currentPerson.hints.background}</span>
+                        <span className="text-gray-700">{currentPerson?.hints?.background}</span>
                       </div>
                     )}
-                    {currentPerson.hints.fact && (
+                    {currentPerson?.hints?.fact && (
                       <div className="flex items-center gap-3">
                         <Info className="w-5 h-5 text-green-600" />
-                        <span className="text-gray-700">{currentPerson.hints.fact}</span>
+                        <span className="text-gray-700">{currentPerson?.hints?.fact}</span>
                       </div>
                     )}
                   </div>
