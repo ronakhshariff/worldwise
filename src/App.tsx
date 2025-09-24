@@ -6,6 +6,7 @@ import ResultsScreen from './components/ResultsScreen';
 import FoodGuessrGame from './components/FoodGuessrGame';
 import FoodGuessrResults from './components/FoodGuessrResults';
 import UserProfile from './components/UserProfile';
+import FinalScoreScreen from './components/FinalScoreScreen';
 import samplePeople from './data/samplePeople';
 import { sampleFoods } from './data/sampleFoods';
 import { GameState, Person, Food, Guess } from './types/GameTypes';
@@ -13,7 +14,6 @@ import { GameState, Person, Food, Guess } from './types/GameTypes';
 const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<string>('landing');
   const [gameState, setGameState] = useState<GameState>({
-    round: 1,
     round: 1,
     totalRounds: 5,
     score: 0,
@@ -100,81 +100,62 @@ const App: React.FC = () => {
     }
   };
 
-  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
-    const R = 6371; // Earth's radius in kilometers
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLng/2) * Math.sin(dLng/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  };
-
   const handleCultureGuess = (guess: Guess) => {
     if (!currentPerson) return;
     
-    const distance = calculateDistance(
-      guess.lat, guess.lng,
-      currentPerson.actualLocation.lat, currentPerson.actualLocation.lng
-    );
+    // Calculate distance and score
+    const distance = Math.sqrt(
+      Math.pow(guess.lat - currentPerson.actualLocation.lat, 2) + 
+      Math.pow(guess.lng - currentPerson.actualLocation.lng, 2)
+    ) * 111; // Rough conversion to km
     
-    const points = Math.max(0, Math.round(5000 - distance));
+    const points = Math.max(0, Math.round(1000 - distance));
+    const newScore = gameState.score + points;
+    
+    setGameState(prev => ({ ...prev, score: newScore }));
+    setLastGuess(guess);
     
     // Add to game history
-    const newHistory = [...gameHistory, {
+    const roundData = {
       round: gameState.round,
       points,
       distance,
-      correct: lastGuess?.country === currentPerson?.actualLocation.country,
-      person: currentPerson
-    }];
-    setGameHistory(newHistory);
-    setLastGuess(guess);
+      correct: distance < 100, // Within 100km is considered correct
+      person: currentPerson,
+      guess
+    };
     
-    setGameState(prev => ({
-      ...prev,
-      score: prev.score + points
-    }));
-    
-    if (gameState.round < gameState.totalRounds) {
-      setCurrentScreen('culture-results');
-    } else {
-      setCurrentScreen('culture-results');
-    }
+    setGameHistory(prev => [...prev, roundData]);
+    setCurrentScreen('culture-results');
   };
 
   const handleFoodGuess = (guess: Guess) => {
     if (!currentFood) return;
     
-    const distance = calculateDistance(
-      guess.lat, guess.lng,
-      currentFood.actualLocation.lat, currentFood.actualLocation.lng
-    );
+    // Calculate distance and score
+    const distance = Math.sqrt(
+      Math.pow(guess.lat - currentFood.actualLocation.lat, 2) + 
+      Math.pow(guess.lng - currentFood.actualLocation.lng, 2)
+    ) * 111; // Rough conversion to km
     
-    const points = Math.max(0, Math.round(5000 - distance));
+    const points = Math.max(0, Math.round(1000 - distance));
+    const newScore = gameState.score + points;
     
-    setGameState(prev => ({
-      ...prev,
-      score: prev.score + points
-    }));
+    setGameState(prev => ({ ...prev, score: newScore }));
+    setLastGuess(guess);
     
-    if (gameState.round < gameState.totalRounds) {
-      setCurrentScreen('food-results');
-    } else {
-      setCurrentScreen('food-results');
-    }
-  };
-
-  const startFoodGame = () => {
-    const shuffledFoods = [...sampleFoods].sort(() => Math.random() - 0.5);
-    setCurrentFood(shuffledFoods[0]);
-    setGameState(prev => ({ 
-      ...prev, 
-      round: 1, 
-      timeLeft: 30 
-    }));
-    setCurrentScreen('food-game');
+    // Add to game history
+    const roundData = {
+      round: gameState.round,
+      points,
+      distance,
+      correct: distance < 100, // Within 100km is considered correct
+      food: currentFood,
+      guess
+    };
+    
+    setGameHistory(prev => [...prev, roundData]);
+    setCurrentScreen('food-results');
   };
 
   return (
@@ -182,7 +163,14 @@ const App: React.FC = () => {
       {currentScreen === 'landing' && (
         <LandingPage 
           onStartCultureGame={startCultureGame}
-          onStartFoodGame={startFoodGame}
+          onStartFoodGame={() => {
+            const shuffledFoods = [...sampleFoods].sort(() => Math.random() - 0.5);
+            setCurrentFood(shuffledFoods[0]);
+            setGameState(prev => ({ ...prev, round: 1, score: 0, timeLeft: 30 }));
+            setGameHistory([]);
+            setCurrentScreen('food-game');
+          }}
+          onShowProfile={() => setCurrentScreen('profile')}
         />
       )}
       {currentScreen === 'culture-game' && currentPerson && (
@@ -199,7 +187,7 @@ const App: React.FC = () => {
           guess={lastGuess}
           gameHistory={gameHistory}
           onNextRound={nextCultureRound}
-          onBackToLanding={() => setCurrentScreen('landing')}
+          onBackToLanding={() => setCurrentScreen('final-results')}
         />
       )}
       {currentScreen === 'food-game' && currentFood && (
@@ -217,7 +205,7 @@ const App: React.FC = () => {
           guess={lastGuess}
           gameHistory={gameHistory}
           onNextRound={nextFoodRound}
-          onBackToLanding={() => setCurrentScreen('landing')}
+          onBackToLanding={() => setCurrentScreen('final-results')}
         />
       )}
       {currentScreen === 'profile' && (
@@ -225,6 +213,20 @@ const App: React.FC = () => {
           isOpen={true}
           onClose={() => setCurrentScreen('landing')}
           onBackToLanding={() => setCurrentScreen('landing')} 
+        />
+      )}
+      {currentScreen === 'final-results' && (
+        <FinalScoreScreen
+          gameState={gameState}
+          totalScore={gameState.score}
+          maxPossibleScore={gameState.totalRounds * 1000}
+          rounds={gameHistory}
+          onPlayAgain={() => {
+            setGameState(prev => ({ ...prev, round: 1, score: 0 }));
+            setGameHistory([]);
+            setCurrentScreen('landing');
+          }}
+          onBackToMenu={() => setCurrentScreen('landing')}
         />
       )}
     </AuthProvider>
