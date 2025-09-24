@@ -2,16 +2,31 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
+// TODO: Replace with your actual Firebase configuration
+// Go to https://console.firebase.google.com/ and create a new project
+// Then go to Project Settings > General > Your apps > Web app
+// Copy the config object and replace the one below
 const firebaseConfig = {
-  apiKey: "AIzaSyBvQZ8Q9X2Y3Z4A5B6C7D8E9F0G1H2I3J4K5L",
-  authDomain: "globeguessr-auth.firebaseapp.com",
-  projectId: "globeguessr-auth",
-  storageBucket: "globeguessr-auth.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abcdef1234567890abcdef"
+  apiKey: "your-api-key-here",
+  authDomain: "your-project-id.firebaseapp.com",
+  projectId: "your-project-id",
+  storageBucket: "your-project-id.appspot.com",
+  messagingSenderId: "your-sender-id",
+  appId: "your-app-id"
 };
 
-const app = initializeApp(firebaseConfig);
+// For development, you can use this demo config (but data won't persist)
+const demoConfig = {
+  apiKey: "demo-key",
+  authDomain: "demo.firebaseapp.com",
+  projectId: "demo-project",
+  storageBucket: "demo-project.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "demo-app-id"
+};
+
+// Use demo config for now - replace with real config when ready
+const app = initializeApp(demoConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export default app;

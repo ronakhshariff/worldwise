@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LandingPage from './components/LandingPage';
 import GameScreen from './components/GameScreen';
 import ResultsScreen from './components/ResultsScreen';
@@ -11,7 +11,8 @@ import samplePeople from './data/samplePeople';
 import { sampleFoods } from './data/sampleFoods';
 import { GameState, Person, Food, Guess } from './types/GameTypes';
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
+  const { user, userProfile, addGameSession } = useAuth();
   const [currentScreen, setCurrentScreen] = useState<string>('landing');
   const [gameState, setGameState] = useState<GameState>({
     round: 1,
@@ -50,9 +51,11 @@ const App: React.FC = () => {
     
     setGameState(prev => ({ 
       ...prev, 
-      round: prev.round + 1, 
+      round: 1, 
+      score: 0,
       timeLeft: 30 
     }));
+    setGameHistory([]);
     setCurrentScreen('culture-game');
   };
 
@@ -81,6 +84,16 @@ const App: React.FC = () => {
       }));
       setCurrentScreen('culture-game');
     } else {
+      // Game completed - save to user profile
+      if (user && userProfile) {
+        addGameSession({
+          gameType: 'culture',
+          score: gameState.score,
+          rounds: gameState.totalRounds,
+          completedAt: new Date(),
+          achievements: []
+        });
+      }
       setCurrentScreen('culture-results');
     }
   };
@@ -96,6 +109,16 @@ const App: React.FC = () => {
       }));
       setCurrentScreen('food-game');
     } else {
+      // Game completed - save to user profile
+      if (user && userProfile) {
+        addGameSession({
+          gameType: 'food',
+          score: gameState.score,
+          rounds: gameState.totalRounds,
+          completedAt: new Date(),
+          achievements: []
+        });
+      }
       setCurrentScreen('food-results');
     }
   };
@@ -159,7 +182,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <AuthProvider>
+    <>
       {currentScreen === 'landing' && (
         <LandingPage 
           onStartCultureGame={startCultureGame}
@@ -229,6 +252,14 @@ const App: React.FC = () => {
           onBackToMenu={() => setCurrentScreen('landing')}
         />
       )}
+    </>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <AppContent />
     </AuthProvider>
   );
 };
