@@ -6,9 +6,9 @@ import {
   signOut, 
   onAuthStateChanged,
   updateProfile,
-  signInAnonymously
+  signInAnonymously as firebaseSignInAnonymously
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc, increment } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 
 export interface Achievement {
@@ -57,7 +57,7 @@ interface AuthContextType {
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
   addGameSession: (session: Omit<GameSession, 'id'>) => Promise<void>;
   unlockAchievement: (achievementId: string) => Promise<void>;
-  getAchievements: () => Achievement[];
+  getAchievements: () => Omit<Achievement, 'unlockedAt'>[];
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -153,7 +153,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             const newProfile: UserProfile = {
               uid: user.uid,
               email: user.email || '',
-              displayName: user.displayName || '',
+              displayName: user.displayName || 'Anonymous Player',
               photoURL: user.photoURL || undefined,
               totalScore: 0,
               gamesPlayed: 0,
@@ -219,7 +219,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signInAnonymously = async () => {
     try {
-      const userCredential = await signInAnonymously(auth);
+      const userCredential = await firebaseSignInAnonymously(auth);
       
       const newProfile: UserProfile = {
         uid: userCredential.user.uid,
