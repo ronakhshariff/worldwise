@@ -14,7 +14,7 @@ const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<string>('landing');
   const [gameState, setGameState] = useState<GameState>({
     round: 1,
-    currentRound: 1,
+    round: 1,
     totalRounds: 5,
     score: 0,
     timeLeft: 30,
@@ -50,14 +50,14 @@ const App: React.FC = () => {
     
     setGameState(prev => ({ 
       ...prev, 
-      currentRound: prev.currentRound + 1, 
+      round: prev.round + 1, 
       timeLeft: 30 
     }));
     setCurrentScreen('culture-game');
   };
 
   const nextCultureRound = () => {
-    if (gameState.currentRound < gameState.totalRounds) {
+    if (gameState.round < gameState.totalRounds) {
       const availablePeople = getAvailablePeople();
       if (availablePeople.length === 0) {
         // If no more people available in current round, get new people
@@ -76,7 +76,7 @@ const App: React.FC = () => {
       
       setGameState(prev => ({ 
         ...prev, 
-        currentRound: prev.currentRound + 1, 
+        round: prev.round + 1, 
         timeLeft: 30 
       }));
       setCurrentScreen('culture-game');
@@ -86,12 +86,12 @@ const App: React.FC = () => {
   };
 
   const nextFoodRound = () => {
-    if (gameState.currentRound < gameState.totalRounds) {
+    if (gameState.round < gameState.totalRounds) {
       const shuffledFoods = [...sampleFoods].sort(() => Math.random() - 0.5);
       setCurrentFood(shuffledFoods[0]);
       setGameState(prev => ({ 
         ...prev, 
-        currentRound: prev.currentRound + 1, 
+        round: prev.round + 1, 
         timeLeft: 30 
       }));
       setCurrentScreen('food-game');
@@ -123,7 +123,7 @@ const App: React.FC = () => {
     
     // Add to game history
     const newHistory = [...gameHistory, {
-      round: gameState.currentRound,
+      round: gameState.round,
       points,
       distance,
       correct: lastGuess?.country === currentPerson?.actualLocation.country,
@@ -137,7 +137,7 @@ const App: React.FC = () => {
       score: prev.score + points
     }));
     
-    if (gameState.currentRound < gameState.totalRounds) {
+    if (gameState.round < gameState.totalRounds) {
       setCurrentScreen('culture-results');
     } else {
       setCurrentScreen('culture-results');
@@ -159,7 +159,7 @@ const App: React.FC = () => {
       score: prev.score + points
     }));
     
-    if (gameState.currentRound < gameState.totalRounds) {
+    if (gameState.round < gameState.totalRounds) {
       setCurrentScreen('food-results');
     } else {
       setCurrentScreen('food-results');
@@ -171,7 +171,7 @@ const App: React.FC = () => {
     setCurrentFood(shuffledFoods[0]);
     setGameState(prev => ({ 
       ...prev, 
-      currentRound: 1, 
+      round: 1, 
       timeLeft: 30 
     }));
     setCurrentScreen('food-game');

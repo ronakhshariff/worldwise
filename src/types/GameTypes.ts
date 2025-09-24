@@ -36,7 +36,7 @@ export interface Guess {
 
 export interface GameState {
   round: number;
-  currentRound: number;
+  
   totalRounds: number;
   timeLeft: number;
   score: number;
