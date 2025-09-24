@@ -112,7 +112,7 @@ const FoodGuessrResults: React.FC<FoodGuessrResultsProps> = ({
                 {currentFood.name}
               </h2>
               <p className="text-lg text-gray-600 mb-4">
-                {currentFood.description}
+                {currentFood.actualLocation.cuisine} Cuisine
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center justify-between">

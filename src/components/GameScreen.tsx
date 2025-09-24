@@ -123,7 +123,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ gameState, currentPerson, onSub
   // Use a more robust state management approach
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [timeLeft, setTimeLeft] = useState(gameState.timeLeft);
-  const [showHints, setShowHints] = useState(false);
+  // const [showHints, setShowHints] = useState(false);
   const [showName, setShowName] = useState(false);
   const [showLanguage, setShowLanguage] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -219,7 +219,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ gameState, currentPerson, onSub
   console.log('Safe location:', safeLocation); // Debug log
 
   // Get the ACTUAL native script language for this person
-  const nativeLanguage = getNativeScriptLanguage(currentPerson.name, currentPerson.actualLocation.ethnicity);
+  // const nativeLanguage = getNativeScriptLanguage(currentPerson.name, currentPerson.actualLocation.ethnicity);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 p-6">
@@ -345,7 +345,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ gameState, currentPerson, onSub
                     
                     {/* Name Hint Content */}
                     <AnimatePresence>
-                      {!showName && showHints && (
+                      {!showName && false && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
@@ -383,7 +383,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ gameState, currentPerson, onSub
                         </div>
                         <div>
                           <h2 className="text-xl font-bold text-gray-800">
-                            {showLanguage ? nativeLanguage : 'Language Hint'}
+                            {showLanguage ? getNativeScriptLanguage(currentPerson.name, currentPerson.actualLocation.ethnicity) : 'Language Hint'}
                           </h2>
                           <p className="text-sm text-gray-600">
                             {showLanguage ? 'Native script revealed' : 'Click to reveal native script'}
@@ -439,7 +439,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ gameState, currentPerson, onSub
 
             {/* Hints Panel */}
             <AnimatePresence>
-              {showHints && currentPerson.hints && (
+              {false && currentPerson.hints && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
